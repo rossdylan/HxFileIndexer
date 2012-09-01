@@ -1,4 +1,4 @@
-import grabber
+from grabber import grab
 import xappy
 
 
@@ -34,13 +34,11 @@ class XapianIndexer(object):
 
         self.iconn = iconn
 
-    def add_files(self, root):
-        self.files = grabber.grab(root)
-        self.files_count = len(self.files)
 
-    def index_files(self):
+    def index_files(self, files):
         print "Indexing..."
-        for f in self.files:
+        count = 0
+        for f in files:
             reprint(f.name)
             doc = xappy.UnprocessedDocument()
             doc.fields.append(xappy.Field('file_name', f.name, weight=10.0))
@@ -50,7 +48,8 @@ class XapianIndexer(object):
             processed_doc._doc.set_data(f.json)
             processed_doc._data = None
             self.iconn.add(processed_doc)
-        return self.files_count
+            count += 1
+        return count
 
 def search(dbpath, querystring, offset=0, pagesize=10):
     sconn = xappy.SearchConnection(dbpath)
@@ -65,8 +64,8 @@ def search(dbpath, querystring, offset=0, pagesize=10):
 def run(dbpath, filepath):
     "Indexing {0} into {1}".format(filepath, dbpath)
     indexer = XapianIndexer(dbpath)
-    indexer.add_files(filepath)
-    num = indexer.index_files()
+    grabber = grab(filepath)
+    num = indexer.index_files(grabber)
     print
     print "Indexed {0} files".format(num)
 
